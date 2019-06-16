@@ -72,7 +72,12 @@ const delayFn = (() => {
     return (fn, ...p) => setTimeout(fn, 0, ...p);
 })();
 const delayToNextTick = (promise) => {
-    delayFn(executeCallbacks, promise);
+    // 修复无回调函数，也会注册微任务的bug
+    const callbackMap = promise[PromiseState] === model_1.FULFILLED ? onFilFulledMap : onRejectedMap;
+    const callbacks = callbackMap.get(promise);
+    if (callbacks && callbacks.length !== 0) {
+        delayFn(executeCallbacks, promise);
+    }
 };
 /**
  *Promise解析流程
@@ -144,6 +149,7 @@ const reject = (input, err) => {
         return;
     input[PromiseState] = model_1.REJECTED;
     input[PromiseValue] = err;
+    const callbacks = onRejectedMap.get(input);
     delayToNextTick(input);
 };
 /**

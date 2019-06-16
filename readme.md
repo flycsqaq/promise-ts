@@ -7,10 +7,11 @@ npm install
 npm run test
 ```
 ## promise流程图
+![promise流程图](./assets/promise.jpg)
 
 ## 问题
-### 1. 为什么this[PromiseState] === 'pending'无法确保Promise改变状态
-根据The Promise Resolution Procedure2.3.3 
+### 1. 为什么this[PromiseState] === 'pending'无法确保Promise未执行resolve/reject
+根据The Promise Resolution Procedure2.3.3 .
 如果
 ```
 const promiseA = new Promise((resolve, reject) => {
@@ -31,7 +32,7 @@ const PromiseB = promiseA.then(res => {
 需要用额外的参数来控制Resolve,reject只能执行一次.(闭包)
 
 ### 2. 为什么用全局Map保存回调与链式调用的顺序
-保持Promise的纯净性，如果使用闭包保存回调，在传递过程中会比较复杂。因而创建全局Map保存所需要的数据。
+保持Promise的纯净性，如果在Promise保存回调与链式Promise，在传递过程中会比较复杂。因而创建全局Map保存所需要的数据。
 
 ### 3. 可以使用defineProperty/Proxy,在Promise状态改变时执行delayToNextTick吗？
 Proxy不可行，破坏promise纯洁性，因为需要对proxy进行操作触发delayToNextTick，逻辑变得更为复杂，可能创建一个Map用于控制连接两者的关系，但显得多余。

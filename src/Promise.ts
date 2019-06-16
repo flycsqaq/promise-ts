@@ -78,10 +78,15 @@ const delayFn: Function = (() => {
 })()
 
 const delayToNextTick: DelayToNextTick = (promise: MyPromise): void => {
-  delayFn(
-    executeCallbacks,
-    promise
-  )
+  // 修复无回调函数，也会注册微任务的bug
+  const callbackMap: Map<MyPromise, Callback[]> = promise[PromiseState] === FULFILLED? onFilFulledMap: onRejectedMap
+  const callbacks = callbackMap.get(promise) as Callback[]
+  if (callbacks && callbacks.length !== 0) {
+    delayFn(
+      executeCallbacks,
+      promise
+    )
+  }
 }
 
 
@@ -128,6 +133,7 @@ const resolutionProcedure: ResolutionProcedure = (promise: MyPromise, x?: any): 
   // 若x是简单类型的值，则改变promise的状态与值
   promise[PromiseState] = FULFILLED
   promise[PromiseValue] = x
+  
   delayToNextTick(promise)
 }
 
@@ -154,6 +160,7 @@ const reject: OnReject = (input, err) => {
   if (input[PromiseState] !== PENDING) return
   input[PromiseState] = REJECTED
   input[PromiseValue] = err
+  const callbacks = onRejectedMap.get(input) as Callback[]
   delayToNextTick(input)
 }
 
